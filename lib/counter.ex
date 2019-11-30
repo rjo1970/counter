@@ -1,18 +1,4 @@
 defmodule Counter do
-  @moduledoc """
-  Documentation for Counter.
-  """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Counter.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
+  defdelegate inc(), to: Counter.Api
+  defdelegate read(), to: Counter.Api
 end
