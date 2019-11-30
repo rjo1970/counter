@@ -17,4 +17,9 @@ defmodule Counter.Worker do
   def handle_call(:read, _from, state) do
     {:reply, state.count, state}
   end
+
+  def handle_call({:reset, value}, _from, state) when is_integer(value) do
+    state = %{state | count: value}
+    {:reply, value, state}
+  end
 end
