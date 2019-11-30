@@ -13,7 +13,7 @@ defmodule CounterTest do
   end
 
   test "It can reset" do
-    Counter.inc()
+    0..500 |> Enum.each(fn _x -> Counter.inc() end)
     Counter.reset(0)
     assert Counter.read() == 0
   end

@@ -1,25 +1,25 @@
 defmodule Counter.Worker do
   use GenServer
 
+  alias Counter.Model
+
   def start_link(_) do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def init(_) do
-    {:ok, %{count: 0}}
+    {:ok, Model.init()}
   end
 
   def handle_cast(:inc, state) do
-    state = %{state | count: state.count + 1}
-    {:noreply, state}
+    {:noreply, Model.inc(state)}
   end
 
   def handle_call(:read, _from, state) do
-    {:reply, state.count, state}
+    {:reply, Model.read(state), state}
   end
 
-  def handle_call({:reset, value}, _from, state) when is_integer(value) do
-    state = %{state | count: value}
-    {:reply, value, state}
+  def handle_call({:reset, value}, _from, _state) when is_integer(value) do
+    {:reply, value, Model.reset(value)}
   end
 end
