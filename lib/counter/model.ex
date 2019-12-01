@@ -1,8 +1,8 @@
 defmodule Counter.Model do
   defstruct count: 0
 
-  @spec init :: Counter.Model.t()
-  def init() do
+  @spec init([any]) :: Counter.Model.t()
+  def init(_args) do
     %__MODULE__{}
   end
 
@@ -16,7 +16,7 @@ defmodule Counter.Model do
   end
 
   @spec reset(any) :: Counter.Model.t()
-  def reset(value) do
+  def reset(value) when is_integer(value) do
     %__MODULE__{count: value}
   end
 end

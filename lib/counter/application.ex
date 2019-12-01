@@ -5,10 +5,10 @@ defmodule Counter.Application do
 
   use Application
 
-  def start(_type, _args) do
+  def start(_type, args) do
     children = [
       # Starts a worker by calling: Counter.Worker.start_link(arg)
-      {Counter.Worker, nil}
+      {Counter.Worker, args}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

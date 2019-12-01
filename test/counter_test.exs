@@ -22,4 +22,10 @@ defmodule CounterTest do
     Counter.reset(123)
     assert Counter.read() == 123
   end
+
+  test "It cannot be reset to George." do
+    catch_error do
+      Counter.reset("George")
+    end
+  end
 end
