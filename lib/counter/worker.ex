@@ -13,8 +13,8 @@ defmodule Counter.Worker do
   end
 
   @impl GenServer
-  def handle_cast(:inc, state) do
-    {:noreply, Model.inc(state)}
+  def handle_cast({:inc, value}, state) do
+    {:noreply, Model.inc(state, value)}
   end
 
   @impl GenServer

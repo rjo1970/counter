@@ -6,9 +6,9 @@ defmodule Counter.Model do
     %__MODULE__{}
   end
 
-  @spec inc(Counter.Model.t()) :: Counter.Model.t()
-  def inc(model) do
-    %__MODULE__{model | count: model.count + 1}
+  @spec inc(Counter.Model.t(), integer) :: Counter.Model.t()
+  def inc(model, value) do
+    %__MODULE__{model | count: model.count + value}
   end
 
   def read(model) do

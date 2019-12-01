@@ -1,6 +1,6 @@
 defmodule Counter.Api do
-  def inc() do
-    GenServer.cast(Counter.Worker, :inc)
+  def inc(value) do
+    GenServer.cast(Counter.Worker, {:inc, value})
   end
 
   def read() do

@@ -39,4 +39,9 @@ defmodule CounterTest do
       Counter.reset("George")
     end
   end
+
+  test "It can increment by steps." do
+    Counter.inc(5)
+    assert Counter.read() == 5
+  end
 end
