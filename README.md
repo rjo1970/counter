@@ -1,21 +1,18 @@
 # Counter
 
-**TODO: Add description**
+A simple example of a GenServer.
 
-## Installation
+This is obviously over-engineered, but shows how the pieces work together.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `counter` to your list of dependencies in `mix.exs`:
+The Erlang community missed a lot of the influence of the XP/Agile push
+toward smaller, focused units of code.  This is an attempt to echo the
+style promoted by Dave Thomas.  I have attempted to aggressively split
+responsibilities and use comments to make my thinking explicit.
 
-```elixir
-def deps do
-  [
-    {:counter, "~> 0.1.0"}
-  ]
-end
-```
+## Testing
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/counter](https://hexdocs.pm/counter).
+`mix test`
 
+## Run from iex
+
+`iex -S mix`

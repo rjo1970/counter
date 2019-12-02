@@ -1,9 +1,11 @@
 defmodule Counter.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
-
   use Application
+
+  @moduledoc """
+  This is the top of the world.  It lists the child processes to start.
+  In this case, a Counter.Worker should be started, and be supervised
+  by the Counter.Supervisor process.
+  """
 
   def start(_type, args) do
     children = [
@@ -11,8 +13,10 @@ defmodule Counter.Application do
       {Counter.Worker, args}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
+    # The one_for_one strategy makes sure that if the Counter.Worker crashes,
+    # it will be immediately restarted by the Counter.Supervisor process.
+    # The name Counter.Supervisor is just a reference to find the related
+    # supervisor's process ID.  It is not a unit of code.
     opts = [strategy: :one_for_one, name: Counter.Supervisor]
     Supervisor.start_link(children, opts)
   end
