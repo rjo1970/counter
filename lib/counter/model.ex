@@ -14,6 +14,8 @@ defmodule Counter.Model do
   # This says a %Counter.Model{} has a single field, count, defaulted to 0
   defstruct count: 0
 
+  @type t :: %Counter.Model{count: integer}
+
   @spec init([any]) :: Counter.Model.t()
   def init(_args) do
     # This returns the initial value- a Counter.Model with defaulted fields.
@@ -26,14 +28,15 @@ defmodule Counter.Model do
     %__MODULE__{model | count: model.count + value}
   end
 
-  def read(model) do
+  @spec read(Counter.Model.t()) :: integer
+  def read(%Counter.Model{} = model) do
     # This method hides *how* the model calculates the count.
     # By having the logic here, we can change everything without having
     # to change every model.count reference out in the codebase.
     model.count
   end
 
-  @spec reset(any) :: Counter.Model.t()
+  @spec reset(integer) :: Counter.Model.t()
   def reset(value) when is_integer(value) do
     # Just create a new model with the provided value.
     %__MODULE__{count: value}

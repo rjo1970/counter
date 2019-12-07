@@ -9,6 +9,10 @@ toward smaller, focused units of code.  This is an attempt to echo the
 style promoted by Dave Thomas.  I have attempted to aggressively split
 responsibilities and use comments to make my thinking explicit.
 
+## Setup
+
+`mix deps.get`
+
 ## Testing
 
 `mix test`
@@ -16,3 +20,12 @@ responsibilities and use comments to make my thinking explicit.
 ## Run from iex
 
 `iex -S mix`
+
+*Session Example*
+
+```
+iex> Counter.inc()
+:ok
+iex> Counter.read()
+1
+```
