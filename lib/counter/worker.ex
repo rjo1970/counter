@@ -20,7 +20,7 @@ defmodule Counter.Worker do
   """
   use GenServer
 
-  alias Counter.Model
+  alias Counter.CrdtModel, as: Model
 
   def start_link(args) do
     # The name `start_link` means that this process will enter a death pact
@@ -58,12 +58,12 @@ defmodule Counter.Worker do
   end
 
   @impl GenServer
-  def handle_call({:reset, value}, _from, _state) when is_integer(value) do
+  def handle_call({:reset, value}, _from, state) when is_integer(value) do
     # The second argument lets you know "who is asking"- most of the time,
     # it doesn't matter and is ignored.
 
     # In this method, we don't even need the state, since we will replace
     # it with a new state based on the value.
-    {:reply, value, Model.reset(value)}
+    {:reply, value, Model.reset(state, value)}
   end
 end
