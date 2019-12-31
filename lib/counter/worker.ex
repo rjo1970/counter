@@ -37,7 +37,7 @@ defmodule Counter.Worker do
 
   @impl GenServer
   def init(args) do
-    # We start the timer for a repeated tick event.
+    # We start the timer for the first tick event.
     schedule_tick()
 
     # This creates our initial state.  Any return value other than
@@ -56,6 +56,8 @@ defmodule Counter.Worker do
     # It does not cause other nodes to send messages themselves.  This prevents
     # causing a message storm.
     Counter.Distributor.send_to_nodes(state)
+
+    # Schedule the next tick
     schedule_tick()
     {:noreply, state}
   end
