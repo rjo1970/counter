@@ -17,7 +17,8 @@ defmodule Counter.Api do
     GenServer.call(Counter.Worker, :read)
   end
 
-  def reset(value) when is_integer(value) do
+  def reset(value) when is_integer(value) and value >= 0 do
+    Counter.Distributor.reset_nodes(value)
     GenServer.call(Counter.Worker, {:reset, value})
   end
 end

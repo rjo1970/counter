@@ -20,7 +20,7 @@ defmodule Counter.CrdtModelTest do
   test "Incrementing the state works" do
     state = Counter.CrdtModel.init(counter_node_name: :node1)
     result = Counter.CrdtModel.inc(state, 42)
-    assert result == {:node1, %{node1: %{count: 42}}}
+    assert {:node1, %{node1: %{count: 42}}} = result
   end
 
   test "Reading the state works" do
@@ -42,7 +42,7 @@ defmodule Counter.CrdtModelTest do
       |> Counter.CrdtModel.inc(22)
 
     result = Counter.CrdtModel.merge(state1, model2)
-    assert result == {:node1, %{node1: %{count: 20}, node2: %{count: 22}}}
+    assert {:node1, %{node1: %{count: 20}, node2: %{count: 22}}} = result
     assert Counter.CrdtModel.read(result) == 42
   end
 end

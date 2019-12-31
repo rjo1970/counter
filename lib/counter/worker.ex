@@ -13,14 +13,16 @@ defmodule Counter.Worker do
   data being half-baked or lost between contending processes.  This
   is the secret sauce of reliable, simple asyncronous programming!
 
-  There is no knowlege of how a counter works inside this file.
-  You could completely replace the Counter.Model implementation. As
-  long as the method signatures remained the same, nothing needs to
-  change except the alias below.
+  There is no knowlege of how a counter works, but we now need to
+  synchronize state between different nodes.
   """
   use GenServer
 
   alias Counter.CrdtModel, as: Model
+
+  # A 'tick' happens every 10 seconds to
+  # distribute our state to peers.
+  @tick_interval 10_000
 
   def start_link(args) do
     # The name `start_link` means that this process will enter a death pact
@@ -35,9 +37,32 @@ defmodule Counter.Worker do
 
   @impl GenServer
   def init(args) do
+    # We start the timer for a repeated tick event.
+    schedule_tick()
+
     # This creates our initial state.  Any return value other than
     # `{:ok, initial_state}` will crash on startup.
     {:ok, Model.init(args)}
+  end
+
+  def schedule_tick() do
+    # This will send a :tick info message to the GenServer after @tick_interval ms.
+    Process.send_after(self(), :tick, @tick_interval)
+  end
+
+  @impl GenServer
+  def handle_info(:tick, state) do
+    # This sends our model to other nodes, who will accept and merge it.
+    # It does not cause other nodes to send messages themselves.  This prevents
+    # causing a message storm.
+    Counter.Distributor.send_to_nodes(state)
+    schedule_tick()
+    {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_cast({:merge, model}, state) do
+    {:noreply, Model.merge(state, model)}
   end
 
   @impl GenServer
@@ -59,11 +84,15 @@ defmodule Counter.Worker do
 
   @impl GenServer
   def handle_call({:reset, value}, _from, state) when is_integer(value) do
-    # The second argument lets you know "who is asking"- most of the time,
-    # it doesn't matter and is ignored.
+    # Resetting our state works if we are the only node.
+    # In a multi-node cluster, our state will be returned to us on the next
+    # tick of another system.
 
-    # In this method, we don't even need the state, since we will replace
-    # it with a new state based on the value.
+    # It is tempting to tell other systems to reset here, similar to the tick
+    # info handler above.  In this case, it would cause a never-ending storm
+    # of messages between nodes constantly resetting each other.
+
+    # Instead, it should be handled by the API layer.
     {:reply, value, Model.reset(state, value)}
   end
 end

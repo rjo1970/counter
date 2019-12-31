@@ -1,7 +1,7 @@
 defmodule Counter.CrdtModel do
-  @spec init(keyword) :: {Atom, %{Atom => %{count: 0}}}
+  @spec init(keyword) :: {Atom, Map.t()}
   def init(args) do
-    {node_name(args), %{node_name(args) => %{count: 0}}}
+    {node_name(args), %{node_name(args) => %{count: 0, never_merged: true}}}
   end
 
   @spec node_name(keyword) :: Atom
@@ -24,7 +24,9 @@ defmodule Counter.CrdtModel do
   end
 
   def merge({node_name, model_a}, model_b) do
-    keys = Map.keys(model_a) ++ Map.keys(model_b)
+    keys =
+      (Map.keys(model_a) ++ Map.keys(model_b))
+      |> Enum.uniq()
 
     merged_model =
       keys
@@ -32,10 +34,28 @@ defmodule Counter.CrdtModel do
         {k, Map.get(model_a, k, %{count: 0}), Map.get(model_b, k, %{count: 0})}
       end)
       |> Enum.map(fn {k, a, b} ->
-        if a.count > b.count do
+        never_merged = Map.get(a, :never_merged, false)
+
+        if never_merged and k == node_name do
+          # If we have just started running, but have racked up some increments,
+          # we would lose them or the legacy count, whichever was less.
+          #
+          # Instead, if we have never merged before, we want to add new increments
+          # to the returning legacy count.
+          count = a.count + b.count
+
+          a =
+            Map.put(a, :never_merged, false)
+            |> Map.put(:count, count)
+
           {k, a}
         else
-          {k, b}
+          # In all other cases, we want to take the larger count
+          if a.count > b.count do
+            {k, a}
+          else
+            {k, b}
+          end
         end
       end)
       |> Map.new()
@@ -44,9 +64,6 @@ defmodule Counter.CrdtModel do
   end
 
   def reset({node_name, _model}, value) do
-    # Careful, this isn't going to work "in the real world"
-    # Even though we can use it to pass tests with a minor signature change in the worker
-    # so we preserve our node name.
     init(counter_node_name: node_name)
     |> inc(value)
   end

@@ -8,7 +8,17 @@ defmodule Counter.Application do
   """
 
   def start(_type, args) do
+    # The cluster supervisor needs to know how to be configured.
+    # For this example, we want to use UDP gossip to find other instances.
+    topologies = [
+      counter_cluster: [
+        strategy: Cluster.Strategy.Gossip
+      ]
+    ]
+
     children = [
+      # We use a cluster supervisor to automatically discover other nodes.
+      {Cluster.Supervisor, [topologies, [name: Counter.ClusterSupervisor]]},
       # Starts a worker by calling: Counter.Worker.start_link(arg)
       {Counter.Worker, args}
     ]

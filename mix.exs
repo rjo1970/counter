@@ -22,6 +22,7 @@ defmodule Counter.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:libcluster, "~> 3.1"},
       {:dialyzex, "~> 1.2.0", only: :dev},
       {:credo, "~> 1.1", only: [:dev, :test], runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
