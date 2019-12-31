@@ -1,5 +1,19 @@
 defmodule Counter.CrdtModel do
-  @spec init(keyword) :: {Atom, Map.t()}
+  @moduledoc """
+  A Model to drive the Counter.Api that uses a conflict-free, replicated
+  data type to allow in all cases merging existing data between nodes.
+
+  This forms an eventually-consistent data model, allowing multiple nodes
+  to participate as a single counter without negotiating leader/follower
+  policies.  In CAP terms, this is an AP system, remaining Available and
+  Partition-tolerant.  The risk is that increments to a node could be
+  lost if it fails to share its data before being taken down.
+
+  The name can be defined as a Keyword argument `counter_node_name` or
+  default as the result of evaluating `Node.self()`
+  """
+
+  @spec init(keyword) :: {Atom, %{Atom => %{count: 0, never_merged: true}}}
   def init(args) do
     {node_name(args), %{node_name(args) => %{count: 0, never_merged: true}}}
   end
@@ -11,16 +25,17 @@ defmodule Counter.CrdtModel do
   end
 
   def inc({node_name, model}, value) when value >= 0 do
+    # Increment only your own node in the model.
     node = Map.get(model, node_name)
     model = Map.put(model, node_name, %{node | count: node.count + value})
     {node_name, model}
   end
 
   def read({_node_name, model}) do
+    # To get the sum of the counter, take the counts of all nodes, and sum them.
     Map.values(model)
-    |> Enum.reduce(0, fn node, a ->
-      a + node.count
-    end)
+    |> Enum.map(fn node -> node.count end)
+    |> Enum.sum()
   end
 
   def merge({node_name, model_a}, model_b) do
@@ -44,6 +59,8 @@ defmodule Counter.CrdtModel do
           # to the returning legacy count.
           count = a.count + b.count
 
+          # Switch the flag off so we know we have now merged
+          # and set the count
           a =
             Map.put(a, :never_merged, false)
             |> Map.put(:count, count)
