@@ -18,6 +18,8 @@ defmodule Counter.Worker do
   """
   use GenServer
 
+  require Logger
+
   alias Counter.CrdtModel, as: Model
 
   # A 'tick' happens every 10 seconds to
@@ -56,6 +58,8 @@ defmodule Counter.Worker do
     # It does not cause other nodes to send messages themselves.  This prevents
     # causing a message storm.
     Counter.Distributor.send_to_nodes(state)
+
+    Logger.debug(inspect(state))
 
     # Schedule the next tick
     schedule_tick()

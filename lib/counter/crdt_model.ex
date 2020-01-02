@@ -13,9 +13,9 @@ defmodule Counter.CrdtModel do
   default as the result of evaluating `Node.self()`
   """
 
-  @spec init(keyword) :: {Atom, %{Atom => %{count: 0, never_merged: true}}}
+  @spec init(keyword) :: {Atom, %{Atom => %{count: 0, never_merged: true, version: 0}}}
   def init(args) do
-    {node_name(args), %{node_name(args) => %{count: 0, never_merged: true}}}
+    {node_name(args), %{node_name(args) => %{count: 0, never_merged: true, version: 0}}}
   end
 
   @spec node_name(keyword) :: Atom
@@ -38,15 +38,40 @@ defmodule Counter.CrdtModel do
     |> Enum.sum()
   end
 
+  defp current_version(keys, model_a, model_b) do
+    keys
+    |> Enum.map(fn k ->
+      a_version = get_in(model_a, [k, :version]) || 0
+      b_version = get_in(model_b, [k, :version]) || 0
+      max(a_version, b_version)
+    end)
+    |> Enum.max()
+  end
+
+  defp model_record(model, key, current_version) do
+    new_entry = %{count: 0, version: current_version, never_merged: true}
+    entry = Map.get(model, key, new_entry)
+
+    if entry.version != current_version do
+      new_entry
+    else
+      entry
+    end
+  end
+
   def merge({node_name, model_a}, model_b) do
     keys =
       (Map.keys(model_a) ++ Map.keys(model_b))
       |> Enum.uniq()
 
+    version = current_version(keys, model_a, model_b)
+
     merged_model =
       keys
       |> Enum.map(fn k ->
-        {k, Map.get(model_a, k, %{count: 0}), Map.get(model_b, k, %{count: 0})}
+        a = model_record(model_a, k, version)
+        b = model_record(model_b, k, version)
+        {k, a, b}
       end)
       |> Enum.map(fn {k, a, b} ->
         never_merged = Map.get(a, :never_merged, false)
@@ -80,8 +105,14 @@ defmodule Counter.CrdtModel do
     {node_name, merged_model}
   end
 
-  def reset({node_name, _model}, value) do
-    init(counter_node_name: node_name)
-    |> inc(value)
+  def reset({node_name, model}, value) do
+    {node_name,
+     %{
+       node_name => %{
+         count: value,
+         never_merged: true,
+         version: get_in(model, [node_name, :version]) + 1
+       }
+     }}
   end
 end
