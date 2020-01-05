@@ -42,7 +42,19 @@ defmodule Counter.CrdtModelTest do
       |> Counter.CrdtModel.inc(22)
 
     result = Counter.CrdtModel.merge(state1, model2)
-    assert {:node1, %{node1: %{count: 20}, node2: %{count: 22}}} = result
     assert Counter.CrdtModel.read(result) == 42
+  end
+
+  test "Two nodes can reset to arbitrary values, and one of them wins." do
+    state1 =
+      Counter.CrdtModel.init(counter_node_name: :node1)
+      |> Counter.CrdtModel.reset(7)
+
+    {_node2_name, model2} =
+      Counter.CrdtModel.init(counter_node_name: :node2)
+      |> Counter.CrdtModel.reset(11)
+
+    result = Counter.CrdtModel.merge(state1, model2)
+    assert Counter.CrdtModel.read(result) == 11
   end
 end

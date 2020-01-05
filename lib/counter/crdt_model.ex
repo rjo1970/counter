@@ -13,9 +13,11 @@ defmodule Counter.CrdtModel do
   default as the result of evaluating `Node.self()`
   """
 
-  @spec init(keyword) :: {Atom, %{Atom => %{count: 0, never_merged: true, version: 0}}}
+  @spec init(keyword) ::
+          {Atom, %{Atom => %{count: 0, never_merged: true, version: {Atom, integer}}}}
   def init(args) do
-    {node_name(args), %{node_name(args) => %{count: 0, never_merged: true, version: 0}}}
+    node_name = node_name(args)
+    {node_name, %{node_name => %{count: 0, never_merged: true, version: {:start, 0}}}}
   end
 
   @spec node_name(keyword) :: Atom
@@ -41,8 +43,8 @@ defmodule Counter.CrdtModel do
   defp current_version(keys, model_a, model_b) do
     keys
     |> Enum.map(fn k ->
-      a_version = get_in(model_a, [k, :version]) || 0
-      b_version = get_in(model_b, [k, :version]) || 0
+      a_version = get_in(model_a, [k, :version])
+      b_version = get_in(model_b, [k, :version])
       max(a_version, b_version)
     end)
     |> Enum.max()
@@ -106,12 +108,14 @@ defmodule Counter.CrdtModel do
   end
 
   def reset({node_name, model}, value) do
+    {_node_identifier, version_number} = get_in(model, [node_name, :version])
+
     {node_name,
      %{
        node_name => %{
          count: value,
          never_merged: true,
-         version: get_in(model, [node_name, :version]) + 1
+         version: {node_name, version_number + 1}
        }
      }}
   end
