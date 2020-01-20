@@ -18,13 +18,11 @@ defmodule Counter.Worker do
   """
   use GenServer
 
-  require Logger
-
   alias Counter.CrdtModel, as: Model
 
   # A 'tick' happens every 10 seconds to
   # distribute our state to peers.
-  @tick_interval 10_000
+  @tick_interval :timer.seconds(10)
 
   def start_link(args) do
     # The name `start_link` means that this process will enter a death pact
@@ -54,12 +52,7 @@ defmodule Counter.Worker do
 
   @impl GenServer
   def handle_info(:tick, state) do
-    # This sends our model to other nodes, who will accept and merge it.
-    # It does not cause other nodes to send messages themselves.  This prevents
-    # causing a message storm.
-    Counter.Distributor.send_to_nodes(state)
-
-    Logger.debug(inspect(state))
+    send_to_nodes(state)
 
     # Schedule the next tick
     schedule_tick()
@@ -100,5 +93,15 @@ defmodule Counter.Worker do
 
     # Instead, it should be handled by the API layer.
     {:reply, value, Model.reset(state, value)}
+  end
+
+  @doc """
+  Share your state with other nodes.  Does not update this node.
+  """
+  def send_to_nodes({_my_server_identity, model}) do
+    # This sends our model to other nodes, who will accept and merge it.
+    # It does not cause other nodes to send messages themselves.  This prevents
+    # causing a message storm.
+    GenServer.abcast(Node.list(), Counter.Worker, {:merge, model})
   end
 end
